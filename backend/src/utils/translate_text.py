@@ -17,4 +17,3 @@ def translate_transcript(transcript=TRANSCRIPT_FORMAT, translate_to="en"):
     for entry in transcript:
         entry["text"] = translate(text=entry["text"], translate_to=translate_to)
     return transcript
-

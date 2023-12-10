@@ -2,6 +2,7 @@ from flask import Flask, request, session
 import uuid
 from routes.video import video_bp
 from routes.translate import translate_bp
+from routes.captions import captions_bp
 from utils.audio_to_text import transcribe_audio
 from utils.translate_text import translate
 
@@ -16,9 +17,7 @@ def ensure_session_id():
 
 app.register_blueprint(video_bp, url_prefix='/video')
 app.register_blueprint(translate_bp, url_prefix='/translate')
-
-print(translate())
-# print(transcribe_audio("../in-out/test4.mp4"))
+app.register_blueprint(captions_bp, url_prefix='/captions')
 
 if __name__ == '__main__':
     app.run(debug=True)
