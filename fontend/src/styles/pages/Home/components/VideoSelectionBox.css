@@ -1,0 +1,125 @@
+.video-selection-box-component {
+    background-color: var(--brown-2);
+    width: 740px;
+    height: 420px;
+    border-radius: 10px;
+    border: 1px solid black;
+    padding: 20px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.video-input-selection-container {
+    width: 100%;
+    display: flex;
+}
+
+.video-input-selection-container > .input-selection-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.video-input-selection-container > .input-selection-container > button {
+    all: unset;
+    color: var(--white);
+    font-weight: bold;
+    border-bottom: 2px solid var(--white);
+    padding-bottom: 5px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+}
+
+.video-input-selection-container > .input-selection-container > button {
+    all: unset;
+    color: var(--white);
+    font-weight: bold;
+    border-bottom: 2px solid var(--white);
+    padding: 2px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.video-selection-box-component > .content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.upload-video-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.upload-video-container > .drag-and-drop {
+    flex-grow: 1;
+    border: 4px dashed var(--brown-1);
+    padding: 20px;
+    width: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+}
+
+/* UploadYoutube */
+.upload-youtube-video-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+}
+
+.upload-youtube-video-container > .input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    gap: 10px;
+}
+
+.upload-youtube-video-container > .input-container > #input-label {
+    all: unset;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.upload-youtube-video-container > .input-container > input {
+    all: unset;
+    background-color: var(--white);
+    color: black;
+    border-radius: 5px;
+    padding: 5px 10px;
+    width: 400px;
+}
+
+.upload-youtube-video-container > button {
+    all: unset;
+    cursor: pointer;
+    padding: 5px 10px;
+    background-color: var(--tan-2);
+    font-weight: bold;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}

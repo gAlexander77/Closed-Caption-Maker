@@ -1,0 +1,11 @@
+.video-and-transcript-editor-component {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    grid-template-rows: 1fr 1fr; /* Two equal rows */
+    grid-gap: 10px;
+    height: 500px;
+}
+
+.video-and-transcript-editor-component > div {
+    height: 500px;
+}

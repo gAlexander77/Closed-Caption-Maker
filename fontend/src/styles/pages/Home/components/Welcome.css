@@ -1,0 +1,23 @@
+.welcome-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.welcome-container > h1 {
+    all: unset;
+    font-weight: bold;
+    font-size: calc(3em);
+    cursor: default;
+}
+
+.welcome-container > button {
+    all: unset;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    background-color: var(--tan-2);
+    padding: 10px 15px;
+    border-radius: 10px;
+}
