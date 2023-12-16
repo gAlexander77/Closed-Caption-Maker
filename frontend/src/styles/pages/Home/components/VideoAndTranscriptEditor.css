@@ -1,0 +1,112 @@
+.video-and-transcript-editor-component {
+    display: grid;
+    /* grid-template-columns: 1fr 1fr; Two equal columns */
+    grid-template-rows: auto auto; /* Two equal rows */
+    grid-template-columns: auto auto;
+    /* row-gap: 10px;
+    column-gap: 10px; */
+    gap: 1vw;
+    width: 90vw;
+    padding: 1vw;
+    border-radius: 10px;
+    background-color: var(--brown-2);
+}
+
+.video-and-transcript-editor-component > .video-player {
+    grid-area: 1/1/2/2;
+    background-color: black;
+    max-height: 65vh;
+}
+
+/* Top Right */
+.video-and-transcript-editor-component > .transcript-editor {
+    grid-area: 1/2/2/3;
+    background-color: var(--brown-1);
+    width: 30vw;
+    border-radius: 10px;
+    padding: 10px 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 61vh;
+}
+
+.transcript-editor > .transcript-editor-title {
+    all: unset;
+    font-size: 2rem;
+}
+
+.transcript-editor > .transcript-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: auto;
+}
+
+.transcript-content > .transcript-entry-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    height: 40px;
+    padding: 10px 10px;
+    border-radius: 10px;
+}
+
+.transcript-entry-container input {
+    all: unset;
+    width: 100%;
+    /* font-size: 14px; */
+}
+
+.transcript-entry-container > .time-container {
+    width: 50px;
+    font-size: 14px;
+    background-color: var(--tan-2);
+    width: 40px;
+    overflow: hidden;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+}
+
+.transcript-entry-container > .time-container > p {
+    all: unset;
+}
+
+.text-container {
+    flex-grow: 1;
+}
+
+.start-time-container {
+    justify-content: flex-start;
+}
+
+.end-time-container {
+    justify-content: flex-end;
+}
+
+/* Bottom Left */
+.download-video-with-captions-container {
+    grid-area: 2/1/3/2;
+    height: 50px;
+    background-color: var(--brown-1);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Bottom Right */
+.translate-transcript-container {
+    grid-area: 2/2/3/3;
+    height: 50px;
+    background-color: var(--brown-1);
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

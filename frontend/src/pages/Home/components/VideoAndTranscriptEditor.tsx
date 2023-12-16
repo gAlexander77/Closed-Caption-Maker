@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect, useRef } from "react";
+import React, { FC, useState, useEffect, useRef, createRef } from "react";
 import ReactPlayer from "react-player";
 import "../../../styles/pages/Home/components/VideoAndTranscriptEditor.css";
 
@@ -62,6 +62,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
     };
 
     const [subtitlesUrl, setSubtitlesUrl] = useState("");
+
     useEffect(() => {
         if (transcript) {
             const webVttString = convertJsonToWebVTT(transcript);
@@ -69,16 +70,15 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
             setSubtitlesUrl(URL.createObjectURL(blob));
             console.log(subtitlesUrl);
         }
-    }, [transcript]);
+    }, [transcript, subtitlesUrl]);
 
     const playerRef = useRef(null);
     const handleProgress = (state: any) => {
-        // state.playedSeconds gives the current time
         setCurrentTime(state.playedSeconds.toFixed(0));
     };
 
     return (
-        <div className="video-player-">
+        <div className="video-player">
             <ReactPlayer
                 ref={playerRef}
                 onProgress={handleProgress}
@@ -115,10 +115,45 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
     transcript,
     currentTime,
 }) => {
+    const convertTimeToSeconds = (timeString: string): number => {
+        const parts = timeString.split(":");
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+        const seconds = parseFloat(parts[2]);
+
+        return hours * 3600 + minutes * 60 + seconds;
+    };
+
+    const entryRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+    entryRefs.current = transcript.map(
+        (_, i) => entryRefs.current[i] ?? createRef<HTMLDivElement>()
+    );
+
+    useEffect(() => {
+        const currentEntryIndex = transcript.findIndex((entry) => {
+            const startSeconds = convertTimeToSeconds(entry.start);
+            const endSeconds = convertTimeToSeconds(entry.end);
+            return currentTime >= startSeconds && currentTime < endSeconds;
+        });
+
+        const currentEntryRef = entryRefs.current[currentEntryIndex];
+
+        if (
+            currentEntryIndex !== -1 &&
+            currentEntryRef &&
+            currentEntryRef.current
+        ) {
+            currentEntryRef.current.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+            });
+        }
+    }, [currentTime, transcript]);
+
     return (
-        <div>
-            <h1>Transcript</h1>
-            <div>
+        <div className="transcript-editor">
+            <h1 className="transcript-editor-title">Transcript</h1>
+            <div className="transcript-content">
                 {transcript.map((entry, index) => (
                     <IndividualTranscriptEntry
                         key={index}
@@ -126,6 +161,7 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
                         text={entry.text}
                         end={entry.end}
                         currentTime={currentTime}
+                        entryRef={entryRefs.current[index]}
                     />
                 ))}
             </div>
@@ -138,6 +174,7 @@ interface IndividualTranscriptEntryProps {
     text: string;
     end: string;
     currentTime: number;
+    entryRef: any;
 }
 
 // Each Individual Transcript Entry For TranscriptEditor
@@ -146,6 +183,7 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
     text,
     end,
     currentTime,
+    entryRef,
 }) => {
     const convertTimeToSeconds = (timeString: string): number => {
         const parts = timeString.split(":");
@@ -162,26 +200,41 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
     const isCurrentTimeInRange =
         currentTime >= startTimeInSeconds && currentTime < endTimeInSeconds;
 
+    const formatTime = (timeString: string): string => {
+        const totalSeconds = convertTimeToSeconds(timeString);
+
+        let hours = Math.floor(totalSeconds / 3600);
+        let minutes = Math.floor((totalSeconds - hours * 3600) / 60);
+        let seconds = Math.floor(totalSeconds - hours * 3600 - minutes * 60);
+        console.log(
+            totalSeconds +
+                " " +
+                `${minutes}:${seconds < 10 ? "0" + seconds : seconds}` +
+                " " +
+                start
+        );
+        if (hours > 0) {
+            return `${hours < 10 ? "0" + hours : hours}:${
+                minutes < 10 ? "0" + minutes : minutes
+            }:${seconds < 10 ? "0" + seconds : seconds}`;
+        } else {
+            return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+        }
+    };
+
     return (
         <div
+            ref={entryRef}
+            className="transcript-entry-container"
             style={{
-                display: "flex",
-                background: isCurrentTimeInRange ? "blue" : "white",
-                width: "100%",
+                background: isCurrentTimeInRange ? "#1f1c18" : "",
             }}
         >
-            <div>
-                <input id="start" defaultValue={start} />
+            <div className="time-container">
+                <p id="start">{formatTime(start)}</p>
             </div>
-            <div style={{ width: "100%" }}>
-                <input
-                    id="text"
-                    defaultValue={text}
-                    style={{ width: "100%", background: "transparent" }}
-                />
-            </div>
-            <div>
-                <input id="end" defaultValue={end} />
+            <div className="text-container">
+                <input id="text" defaultValue={text} />
             </div>
         </div>
     );
@@ -189,7 +242,7 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
 
 const DownloadVideoWithCaptions: FC = () => {
     return (
-        <div>
+        <div className="download-video-with-captions-container">
             <button>Download Video With Captions</button>
         </div>
     );
@@ -197,7 +250,7 @@ const DownloadVideoWithCaptions: FC = () => {
 
 const TranslateTranscript: FC = () => {
     return (
-        <div>
+        <div className="translate-transcript-container">
             <button>Translate</button>
         </div>
     );
