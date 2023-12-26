@@ -19,7 +19,7 @@
 }
 
 /* Top Right */
-.video-and-transcript-editor-component > .transcript-editor {
+.video-and-transcript-editor-component .transcript-editor {
     grid-area: 1/2/2/3;
     background-color: var(--brown-1);
     width: 30vw;
@@ -31,9 +31,30 @@
     max-height: 61vh;
 }
 
-.transcript-editor > .transcript-editor-title {
+.transcript-editor > .transcript-editor-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.transcript-editor .transcript-editor-title {
     all: unset;
     font-size: 2rem;
+    flex-grow: 1;
+}
+
+.transcript-editor .undo-changes-btn {
+    all: unset;
+    cursor: pointer;
+    background-color: var(--tan-2);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    font-weight: normal;
+    padding: 7px 10px;
 }
 
 .transcript-editor > .transcript-content {
@@ -51,7 +72,12 @@
     height: 40px;
     padding: 10px 10px;
     border-radius: 10px;
+    cursor: pointer;
 }
+
+/* .transcript-entry-container:hover {
+    background-color: #1f1c1854;
+} */
 
 .transcript-entry-container input {
     all: unset;
@@ -75,6 +101,7 @@
 
 .transcript-entry-container > .time-container > p {
     all: unset;
+    cursor: default;
 }
 
 .text-container {
@@ -98,6 +125,19 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 10px;
+    cursor: default;
+}
+
+.prepare-video-with-captions-btn {
+    all: unset;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 10px;
+}
+
+.prepare-video-with-captions-btn:hover {
+    background-color: var(--brown-2);
 }
 
 /* Bottom Right */
@@ -109,4 +149,61 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+}
+
+.open-translator-menu-btn {
+    all: unset;
+    padding: 5px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.open-translator-menu-btn:hover {
+    background-color: var(--brown-2);
+}
+
+.translate-transcript-menu {
+    width: 100%;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    color: black;
+    background-color: var(--tan-2);
+    max-height: 100%;
+    position: relative;
+}
+
+.translate-transcript-menu .Dropdown-root {
+    /* Custom styles for the dropdown */
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px;
+    width: 200px;
+    position: static;
+}
+
+/* Style for the dropdown options */
+.translate-transcript-menu .Dropdown-option {
+    /* Styles for each option */
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Style for the dropdown when it is open */
+.translate-transcript-menu .Dropdown-open .Dropdown-option {
+    /* Styles for dropdown options when open */
+    background-color: #f9f9f9;
+}
+
+/* Style for the selected option */
+.translate-transcript-menu .Dropdown-control {
+    /* Styles for the selected option display */
+    background-color: black;
+    color: #333;
+    cursor: pointer;
 }

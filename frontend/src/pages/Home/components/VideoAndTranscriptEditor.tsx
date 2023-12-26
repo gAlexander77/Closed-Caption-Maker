@@ -1,6 +1,12 @@
 import React, { FC, useState, useEffect, useRef, createRef } from "react";
+import axios from "axios";
 import ReactPlayer from "react-player";
+import { ThreeDots } from "react-loader-spinner";
+import Dropdown from "react-dropdown";
+import { BsArrowCounterclockwise, BsTranslate } from "react-icons/bs";
 import "../../../styles/pages/Home/components/VideoAndTranscriptEditor.css";
+
+const API_URL = process.env.REACT_APP_API;
 
 interface TranscriptEntry {
     end: string;
@@ -18,20 +24,52 @@ const VideoAndTranscriptEditor: FC<VideoAndTranscriptEditorProps> = ({
     transcript,
     filename,
 }) => {
+    const [transcriptCopy, setTranscriptCopy] =
+        useState<TranscriptEntry[]>(transcript);
+    const [transcriptHasChanged, setTranscriptHasChanged] =
+        useState<boolean>(false);
+
+    useEffect(() => {
+        setTranscriptCopy(transcript);
+    }, [transcript]);
+
+    useEffect(() => {
+        setTranscriptHasChanged(
+            JSON.stringify(transcript) !== JSON.stringify(transcriptCopy)
+        );
+    }, [transcriptCopy]);
+
+    const undoChanges = (): void => {
+        setTranscriptCopy([...transcript]);
+    };
+
+    useEffect(() => {
+        console.log(transcriptCopy);
+    });
+
     const [currentTime, setCurrentTime] = useState(0);
     return (
         <div className="video-and-transcript-editor-component">
             <VideoPlayer
-                transcript={transcript}
+                transcript={transcriptCopy}
                 filename={filename}
                 setCurrentTime={setCurrentTime}
             />
             <TranscriptEditor
-                transcript={transcript}
+                transcript={transcriptCopy}
+                setTranscript={setTranscriptCopy}
                 currentTime={currentTime}
+                transcriptHasChanged={transcriptHasChanged}
+                undoChanges={undoChanges}
             />
-            <DownloadVideoWithCaptions />
-            <TranslateTranscript />
+            <DownloadVideoWithCaptions
+                transcript={transcriptCopy}
+                filename={filename}
+            />
+            <TranslateTranscript
+                transcriptCopy={transcriptCopy}
+                setTranscriptCopy={setTranscriptCopy}
+            />
         </div>
     );
 };
@@ -57,20 +95,22 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
             vttString += `${entry.start} --> ${entry.end}\n`;
             vttString += `${entry.text}\n\n`;
         });
-        console.log(vttString);
+        // console.log(vttString);
         return vttString;
     };
 
     const [subtitlesUrl, setSubtitlesUrl] = useState("");
+    const [subtitlesKey, setSubtitlesKey] = useState(0);
 
     useEffect(() => {
         if (transcript) {
             const webVttString = convertJsonToWebVTT(transcript);
             const blob = new Blob([webVttString], { type: "text/vtt" });
             setSubtitlesUrl(URL.createObjectURL(blob));
-            console.log(subtitlesUrl);
+            // console.log(subtitlesUrl);
+            setSubtitlesKey((prevKey) => prevKey + 1);
         }
-    }, [transcript, subtitlesUrl]);
+    }, [transcript]);
 
     const playerRef = useRef(null);
     const handleProgress = (state: any) => {
@@ -79,10 +119,13 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
 
     return (
         <div className="video-player">
+            {/* <button>Load Transcript Changes</button> */}
             <ReactPlayer
+                className="react-player"
+                key={subtitlesKey}
                 ref={playerRef}
                 onProgress={handleProgress}
-                url={"http://172.16.2.39:5000/my-video/" + filename}
+                url={API_URL + "my-video/" + filename}
                 width="100%"
                 height="100%"
                 controls={true}
@@ -95,7 +138,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
                                 kind: "subtitles",
                                 src: subtitlesUrl,
                                 srcLang: "en",
-                                label: "English", // Label for the track
+                                label: "Captions",
                                 default: true,
                             },
                         ],
@@ -108,12 +151,18 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
 
 interface TranscriptEditorProps {
     transcript: TranscriptEntry[];
+    setTranscript: (transcript: TranscriptEntry[]) => void;
     currentTime: number;
+    transcriptHasChanged: boolean;
+    undoChanges: any;
 }
 
 const TranscriptEditor: FC<TranscriptEditorProps> = ({
     transcript,
+    setTranscript,
     currentTime,
+    transcriptHasChanged,
+    undoChanges,
 }) => {
     const convertTimeToSeconds = (timeString: string): number => {
         const parts = timeString.split(":");
@@ -150,9 +199,29 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
         }
     }, [currentTime, transcript]);
 
+    const handleTextChange = (newText: string, start: string, end: string) => {
+        const updatedTranscript = transcript.map((entry) => {
+            if (entry.start === start && entry.end === end) {
+                return { ...entry, text: newText };
+            }
+            return entry;
+        });
+        setTranscript(updatedTranscript);
+    };
+
     return (
         <div className="transcript-editor">
-            <h1 className="transcript-editor-title">Transcript</h1>
+            <div className="transcript-editor-header">
+                <h1 className="transcript-editor-title">Transcript</h1>
+                {transcriptHasChanged ? (
+                    <button className="undo-changes-btn" onClick={undoChanges}>
+                        <BsArrowCounterclockwise />
+                        Undo Changes
+                    </button>
+                ) : (
+                    <div>{transcriptHasChanged}</div>
+                )}
+            </div>
             <div className="transcript-content">
                 {transcript.map((entry, index) => (
                     <IndividualTranscriptEntry
@@ -162,6 +231,7 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
                         end={entry.end}
                         currentTime={currentTime}
                         entryRef={entryRefs.current[index]}
+                        onChangeText={handleTextChange}
                     />
                 ))}
             </div>
@@ -175,6 +245,7 @@ interface IndividualTranscriptEntryProps {
     end: string;
     currentTime: number;
     entryRef: any;
+    onChangeText: any;
 }
 
 // Each Individual Transcript Entry For TranscriptEditor
@@ -184,6 +255,7 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
     end,
     currentTime,
     entryRef,
+    onChangeText,
 }) => {
     const convertTimeToSeconds = (timeString: string): number => {
         const parts = timeString.split(":");
@@ -206,13 +278,13 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
         let hours = Math.floor(totalSeconds / 3600);
         let minutes = Math.floor((totalSeconds - hours * 3600) / 60);
         let seconds = Math.floor(totalSeconds - hours * 3600 - minutes * 60);
-        console.log(
-            totalSeconds +
-                " " +
-                `${minutes}:${seconds < 10 ? "0" + seconds : seconds}` +
-                " " +
-                start
-        );
+        // console.log(
+        //     totalSeconds +
+        //         " " +
+        //         `${minutes}:${seconds < 10 ? "0" + seconds : seconds}` +
+        //         " " +
+        //         start
+        // );
         if (hours > 0) {
             return `${hours < 10 ? "0" + hours : hours}:${
                 minutes < 10 ? "0" + minutes : minutes
@@ -234,24 +306,204 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
                 <p id="start">{formatTime(start)}</p>
             </div>
             <div className="text-container">
-                <input id="text" defaultValue={text} />
+                <input
+                    id="text"
+                    value={text}
+                    onChange={(e) => onChangeText(e.target.value, start, end)}
+                />
             </div>
         </div>
     );
 };
 
-const DownloadVideoWithCaptions: FC = () => {
+interface DownloadVideoWithCaptionsProps {
+    transcript: TranscriptEntry[];
+    filename: string;
+}
+
+const DownloadVideoWithCaptions: FC<DownloadVideoWithCaptionsProps> = ({
+    transcript,
+    filename,
+}) => {
+    const [isPreparing, setIsPreparing] = useState<boolean>(false);
+    const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+
+    const prepareVideoForDownload = async () => {
+        setIsPreparing(true);
+
+        try {
+            // Construct the path to your API endpoint
+            const endpoint = API_URL + "captions/"; // Replace with the actual host if different
+            const data = {
+                transcript: transcript,
+                filename: filename,
+            };
+
+            // Make the POST request to the Flask server
+            const response = await axios.post(endpoint, data);
+
+            // Handle the response here
+            console.log("Response:", response.data);
+            setDownloadUrl(API_URL + "my-video/" + response.data.video); // Assuming the response contains the path to the video
+
+            setIsPreparing(false); // Reset the preparing state
+        } catch (error) {
+            console.error("Error during video preparation:", error);
+            setIsPreparing(false); // Reset the preparing state even if there's an error
+        }
+    };
     return (
         <div className="download-video-with-captions-container">
-            <button>Download Video With Captions</button>
+            {isPreparing ? (
+                <>
+                    <p>Preparing video for download</p>
+                    <ThreeDots
+                        height="40"
+                        width="40"
+                        radius="9"
+                        color="white"
+                        ariaLabel="three-dots-loading"
+                        wrapperStyle={{}}
+                        visible={true}
+                    />
+                </>
+            ) : downloadUrl ? (
+                <a
+                    href={downloadUrl}
+                    className="download-link"
+                    download={filename}
+                >
+                    Download Video
+                </a>
+            ) : (
+                <button
+                    className="prepare-video-with-captions-btn"
+                    onClick={prepareVideoForDownload}
+                >
+                    Prepare video with captions for download
+                </button>
+            )}
         </div>
     );
 };
 
-const TranslateTranscript: FC = () => {
+interface TranslateTranscriptProps {
+    transcriptCopy: TranscriptEntry[];
+    setTranscriptCopy: (transcript: TranscriptEntry[]) => void;
+}
+
+const TranslateTranscript: FC<TranslateTranscriptProps> = ({
+    transcriptCopy,
+    setTranscriptCopy,
+}) => {
+    const [translatorMenu, setTranstorMenu] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(false);
+    const options = ["English", "Spanish"];
+    const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+    const url = API_URL + "translate/";
+    // useEffect(() => {
+    //     console.log("TRANSLATE COPY IN FUNCTION");
+    //     console.log(transcriptCopy);
+    // });
+
+    // useEffect(() => {
+    //     console.log("Updated transcriptCopy:", transcriptCopy);
+    // }, [transcriptCopy]);
+
+    const handleUpload = async () => {
+        if (!transcriptCopy) {
+            return;
+        }
+
+        try {
+            const data = {
+                transcript: transcriptCopy, // assuming transcriptCopy is the data you want to send
+                language: selectedLanguage, // set the desired language
+            };
+            const response = await axios.post(
+                url,
+                data, // sending the JavaScript object as JSON
+                {
+                    headers: {
+                        "Content-Type": "application/json", // explicitly set the content type (Axios usually does this automatically)
+                    },
+                }
+            );
+
+            // sessionStorage.setItem(
+            //     "transcript",
+            //     JSON.stringify(response.data.translated_transcript)
+            // );
+            console.log("Before update:", transcriptCopy);
+
+            const translated_transcript: TranscriptEntry[] =
+                response.data.translated_transcript;
+            setTranscriptCopy(translated_transcript);
+        } catch (error) {
+            let errorMessage = "Failed to upload";
+            if (axios.isAxiosError(error) && error.response) {
+                errorMessage = error.response.data;
+                console.log(errorMessage);
+            }
+        }
+        setLoading(false);
+        setTranstorMenu(false);
+    };
+
     return (
         <div className="translate-transcript-container">
-            <button>Translate</button>
+            {translatorMenu ? (
+                <div className="translate-transcript-menu">
+                    {loading ? (
+                        <>
+                            <p>Translating Transcript to {selectedLanguage}</p>
+                            <ThreeDots
+                                height="40"
+                                width="40"
+                                radius="9"
+                                color="white"
+                                ariaLabel="three-dots-loading"
+                                wrapperStyle={{}}
+                                visible={true}
+                            />
+                        </>
+                    ) : (
+                        <>
+                            <p>Translate to: </p>
+                            {/* <Dropdown options={options} /> */}
+                            <select
+                                value={selectedLanguage}
+                                onChange={(e) =>
+                                    setSelectedLanguage(e.target.value)
+                                }
+                            >
+                                <option value="english">English</option>
+                                <option value="spanish">Spanish</option>
+                                <option value="german">German</option>
+                                {/* Add more languages as options here */}
+                            </select>
+                            <button
+                                onClick={() => {
+                                    setLoading(true);
+                                    handleUpload();
+                                }}
+                            >
+                                Translate
+                            </button>
+                        </>
+                    )}
+                </div>
+            ) : (
+                <button
+                    className="open-translator-menu-btn"
+                    onClick={() => setTranstorMenu(true)}
+                >
+                    <BsTranslate />
+                    Translate
+                </button>
+            )}
         </div>
     );
 };
+
+//

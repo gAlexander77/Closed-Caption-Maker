@@ -8,8 +8,8 @@ from utils.audio_to_text import transcribe_audio
 from utils.translate_text import translate
 
 app = Flask(__name__)
-CORS(app)
-app.secret_key = str(uuid.uuid4())
+CORS(app, supports_credentials=True)
+app.secret_key = "secret_key"
 
 @app.route('/my-video/<filename>')
 def get_video(filename):
@@ -27,4 +27,6 @@ app.register_blueprint(captions_bp, url_prefix='/captions')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+    # app.run(host='localhost' ,port=5000, debug=True)
+
     

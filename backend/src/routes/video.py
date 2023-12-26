@@ -47,6 +47,7 @@ def upload_video():
 
 @video_bp.route('/upload-youtube-video', methods=['POST'])
 def upload_youtube_video():
+
     if 'url' not in request.form:
         return "No URL provided", 400
 

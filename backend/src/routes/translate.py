@@ -5,16 +5,37 @@ translate_bp = Blueprint('translate', __name__)
 
 @translate_bp.route('/', methods=['POST'])
 def translate():
-    if 'transcript' in request.form:
-        transcript = request.form['transcript']
-    elif 'transcript' in session:
-        transcript = session['transcript']
-    else:
-        return "No transcript available", 400
+    # if 'transcript' in request.form:
+    #     transcript = request.form['transcript']
+    # elif 'transcript' in session:
+    #     transcript = session['transcript']
+    # else:
+    #     return "No transcript available", 400
 
-    translated_transcript = translate_transcript(transcript=transcript, translate_to=request.form['language'])
+    # translated_transcript = translate_transcript(transcript=transcript, translate_to=request.form['language'])
+
+    # session['transcript'] = translated_transcript
+
+    # return jsonify({"translated_transcript": translated_transcript}), 200
+
+
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+
+    transcript = data.get('transcript')
+    language = data.get('language')
+
+    print(transcript)
+
+    if not transcript or not language:
+        return jsonify({"error": "Missing 'transcript' or 'language' in request"}), 400
+
+    translated_transcript = translate_transcript(transcript=transcript, translate_to=language)
+
+    # Consider error handling for the translation process as well
 
     session['transcript'] = translated_transcript
 
-    return jsonify({"translated_transcript": translated_transcript}), 200
-
+    return jsonify({"translated_transcript":translated_transcript}), 200

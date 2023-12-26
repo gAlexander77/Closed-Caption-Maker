@@ -7,8 +7,21 @@ captions_bp = Blueprint('captions', __name__)
 def upload_video():
     videoPath= f"../in-out/{session['session_id']}.mp4"
     saveVideoPath= f"../in-out/{session['session_id']}-captions.mp4"
-    add_captions_to_video(videoPath, session['transcript'], saveVideoPath)
-    return "Done"
+    
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "No JSON data provided"}), 400
+    
+    transcript = data.get('transcript')
+    videoPath = f"../in-out/{data.get('filename')}"
+
+    if not transcript:
+        return jsonify({"error": "No transcript"}), 400
+
+    
+    add_captions_to_video(videoPath, transcript, saveVideoPath)
+    return jsonify({"video": f"{session['session_id']}-captions.mp4"})
 
 
 def add_captions_to_video(video_path, transcript, output_path):

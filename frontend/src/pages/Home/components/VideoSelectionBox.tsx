@@ -1,8 +1,11 @@
 import React, { FC, useState, useCallback } from "react";
+import { ThreeDots } from "react-loader-spinner";
 import { BsCameraReelsFill, BsYoutube } from "react-icons/bs";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import "../../../styles/pages/Home/components/VideoSelectionBox.css";
+
+const API_URL = process.env.REACT_APP_API;
 
 interface TranscriptEntry {
     end: string;
@@ -22,6 +25,7 @@ const VideoSelectionBox: FC<VideoSelectionBoxProps> = ({
     setTranscript,
     setFilename,
 }) => {
+    console.log(API_URL);
     const [isYouTube, setIsYouTube] = useState<boolean>(true);
 
     return (
@@ -114,6 +118,11 @@ interface UploadYoutubeProps {
     setFilename: (filename: string) => void;
 }
 
+const hasSessionCookie = (): boolean => {
+    const cookies = document.cookie.split(";");
+    return cookies.some((cookie) => cookie.trim().startsWith(`session=`));
+};
+
 const UploadYoutube: FC<UploadYoutubeProps> = ({
     setTranscript,
     setRoute,
@@ -121,21 +130,23 @@ const UploadYoutube: FC<UploadYoutubeProps> = ({
 }) => {
     const [youtubeUrl, setYoutubeUrl] = useState("");
     const [uploadStatus, setUploadStatus] = useState("");
+    const [isPosting, setIsPosting] = useState(false);
 
     const handleUpload = async () => {
         if (!youtubeUrl) {
             setUploadStatus("Please enter a YouTube URL.");
+            console.log("Please enter a YouTube URL");
+            setIsPosting(false);
             return;
         }
 
         try {
+            const url = API_URL + "video/upload-youtube-video";
+
             const formData = new FormData();
             formData.append("url", youtubeUrl);
 
-            const response = await axios.post(
-                "http://172.16.2.39:5000/video/upload-youtube-video",
-                formData
-            );
+            const response = await axios.post(url, formData);
             setUploadStatus(
                 `Upload successful. Transcript: ${response.data.transcript}`
             );
@@ -147,12 +158,14 @@ const UploadYoutube: FC<UploadYoutubeProps> = ({
             setTranscript(response.data.transcript);
             setFilename(response.data.filename);
             setRoute("captions-editor");
+            setIsPosting(false);
         } catch (error: any) {
             let errorMessage = "Failed to upload";
             if (axios.isAxiosError(error) && error.response) {
                 errorMessage = error.response.data;
             }
             setUploadStatus(`Error: ${errorMessage}`);
+            setIsPosting(false);
         }
     };
 
@@ -166,9 +179,34 @@ const UploadYoutube: FC<UploadYoutubeProps> = ({
                     onChange={(e) => setYoutubeUrl(e.target.value)}
                     placeholder="Enter YouTube URL"
                 />
-                {uploadStatus && <div>{uploadStatus}</div>}
+                <div className="status-container">
+                    {isPosting ? (
+                        <>
+                            <p>Generating Transcript</p>
+                            <ThreeDots
+                                height="40"
+                                width="40"
+                                radius="9"
+                                color="white"
+                                ariaLabel="three-dots-loading"
+                                wrapperStyle={{}}
+                                visible={true}
+                            />
+                        </>
+                    ) : (
+                        <p style={{ color: "red" }}>{uploadStatus}</p>
+                    )}
+                </div>
             </div>
-            <button onClick={handleUpload}>Upload YouTube Video</button>
+            <button
+                disabled={isPosting}
+                onClick={() => {
+                    setIsPosting(true);
+                    handleUpload();
+                }}
+            >
+                Upload YouTube Video
+            </button>
         </div>
     );
 };
