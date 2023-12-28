@@ -1,9 +1,13 @@
 import React, { FC, useState, useEffect, useRef, createRef } from "react";
-import axios from "axios";
-import ReactPlayer from "react-player";
+import {
+    BsArrowCounterclockwise,
+    BsDownload,
+    BsTranslate,
+} from "react-icons/bs";
 import { ThreeDots } from "react-loader-spinner";
-import Dropdown from "react-dropdown";
-import { BsArrowCounterclockwise, BsTranslate } from "react-icons/bs";
+import ReactPlayer from "react-player";
+import axios from "axios";
+import { supportedLanguages } from "../supportedLanguages";
 import "../../../styles/pages/Home/components/VideoAndTranscriptEditor.css";
 
 const API_URL = process.env.REACT_APP_API;
@@ -164,15 +168,6 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
     transcriptHasChanged,
     undoChanges,
 }) => {
-    const convertTimeToSeconds = (timeString: string): number => {
-        const parts = timeString.split(":");
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1], 10);
-        const seconds = parseFloat(parts[2]);
-
-        return hours * 3600 + minutes * 60 + seconds;
-    };
-
     const entryRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
     entryRefs.current = transcript.map(
         (_, i) => entryRefs.current[i] ?? createRef<HTMLDivElement>()
@@ -257,15 +252,6 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
     entryRef,
     onChangeText,
 }) => {
-    const convertTimeToSeconds = (timeString: string): number => {
-        const parts = timeString.split(":");
-        const hours = parseInt(parts[0], 10);
-        const minutes = parseInt(parts[1], 10);
-        const seconds = parseFloat(parts[2]);
-
-        return hours * 3600 + minutes * 60 + seconds;
-    };
-
     const startTimeInSeconds = convertTimeToSeconds(start);
     const endTimeInSeconds = convertTimeToSeconds(end);
 
@@ -330,28 +316,33 @@ const DownloadVideoWithCaptions: FC<DownloadVideoWithCaptionsProps> = ({
 
     const prepareVideoForDownload = async () => {
         setIsPreparing(true);
-
         try {
-            // Construct the path to your API endpoint
-            const endpoint = API_URL + "captions/"; // Replace with the actual host if different
+            const endpoint = API_URL + "captions/";
             const data = {
                 transcript: transcript,
                 filename: filename,
             };
-
-            // Make the POST request to the Flask server
             const response = await axios.post(endpoint, data);
-
-            // Handle the response here
-            console.log("Response:", response.data);
-            setDownloadUrl(API_URL + "my-video/" + response.data.video); // Assuming the response contains the path to the video
-
-            setIsPreparing(false); // Reset the preparing state
+            setDownloadUrl(API_URL + "my-video/" + response.data.video);
+            setIsPreparing(false);
         } catch (error) {
             console.error("Error during video preparation:", error);
-            setIsPreparing(false); // Reset the preparing state even if there's an error
+            setIsPreparing(false);
         }
     };
+
+    const handleDownload = async () => {
+        const response = await fetch(downloadUrl ?? "");
+        const blob = await response.blob();
+        const newDownloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = newDownloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     return (
         <div className="download-video-with-captions-container">
             {isPreparing ? (
@@ -368,13 +359,12 @@ const DownloadVideoWithCaptions: FC<DownloadVideoWithCaptionsProps> = ({
                     />
                 </>
             ) : downloadUrl ? (
-                <a
-                    href={downloadUrl}
-                    className="download-link"
-                    download={filename}
-                >
-                    Download Video
-                </a>
+                <div className="download-btn-container">
+                    <button className="download-btn" onClick={handleDownload}>
+                        <BsDownload />
+                        <p>Download Video</p>
+                    </button>
+                </div>
             ) : (
                 <button
                     className="prepare-video-with-captions-btn"
@@ -398,17 +388,9 @@ const TranslateTranscript: FC<TranslateTranscriptProps> = ({
 }) => {
     const [translatorMenu, setTranstorMenu] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
-    const options = ["English", "Spanish"];
-    const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+    const options: string[] = supportedLanguages;
+    const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
     const url = API_URL + "translate/";
-    // useEffect(() => {
-    //     console.log("TRANSLATE COPY IN FUNCTION");
-    //     console.log(transcriptCopy);
-    // });
-
-    // useEffect(() => {
-    //     console.log("Updated transcriptCopy:", transcriptCopy);
-    // }, [transcriptCopy]);
 
     const handleUpload = async () => {
         if (!transcriptCopy) {
@@ -417,23 +399,15 @@ const TranslateTranscript: FC<TranslateTranscriptProps> = ({
 
         try {
             const data = {
-                transcript: transcriptCopy, // assuming transcriptCopy is the data you want to send
-                language: selectedLanguage, // set the desired language
+                transcript: transcriptCopy,
+                language: selectedLanguage,
             };
-            const response = await axios.post(
-                url,
-                data, // sending the JavaScript object as JSON
-                {
-                    headers: {
-                        "Content-Type": "application/json", // explicitly set the content type (Axios usually does this automatically)
-                    },
-                }
-            );
+            const response = await axios.post(url, data, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
 
-            // sessionStorage.setItem(
-            //     "transcript",
-            //     JSON.stringify(response.data.translated_transcript)
-            // );
             console.log("Before update:", transcriptCopy);
 
             const translated_transcript: TranscriptEntry[] =
@@ -456,7 +430,10 @@ const TranslateTranscript: FC<TranslateTranscriptProps> = ({
                 <div className="translate-transcript-menu">
                     {loading ? (
                         <>
-                            <p>Translating Transcript to {selectedLanguage}</p>
+                            <p>
+                                Translating Transcript to
+                                {" " + capitalizeFirstLetter(selectedLanguage)}
+                            </p>
                             <ThreeDots
                                 height="40"
                                 width="40"
@@ -470,25 +447,28 @@ const TranslateTranscript: FC<TranslateTranscriptProps> = ({
                     ) : (
                         <>
                             <p>Translate to: </p>
-                            {/* <Dropdown options={options} /> */}
                             <select
+                                className="select-language"
                                 value={selectedLanguage}
                                 onChange={(e) =>
                                     setSelectedLanguage(e.target.value)
                                 }
                             >
-                                <option value="english">English</option>
-                                <option value="spanish">Spanish</option>
-                                <option value="german">German</option>
-                                {/* Add more languages as options here */}
+                                {options.map((language, index) => (
+                                    <option key={index} value={language}>
+                                        {capitalizeFirstLetter(language)}
+                                    </option>
+                                ))}
                             </select>
                             <button
+                                className="translate-btn"
                                 onClick={() => {
                                     setLoading(true);
                                     handleUpload();
                                 }}
                             >
-                                Translate
+                                <BsTranslate id="icon" />
+                                <>Translate</>
                             </button>
                         </>
                     )}
@@ -506,4 +486,16 @@ const TranslateTranscript: FC<TranslateTranscriptProps> = ({
     );
 };
 
-//
+// UTILS
+const convertTimeToSeconds = (timeString: string): number => {
+    const parts = timeString.split(":");
+    const hours = parseInt(parts[0], 10);
+    const minutes = parseInt(parts[1], 10);
+    const seconds = parseFloat(parts[2]);
+
+    return hours * 3600 + minutes * 60 + seconds;
+};
+
+const capitalizeFirstLetter = (string: string): string => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+};
