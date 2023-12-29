@@ -5,6 +5,9 @@ import VideoSelectionBox from "./components/VideoSelectionBox";
 import VideoAndTranscriptEditor from "./components/VideoAndTranscriptEditor";
 import "../../styles/pages/Home/Home.css";
 
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+
 interface TranscriptEntry {
     end: string;
     start: string;
@@ -66,22 +69,26 @@ const Home: FC = () => {
     // -----------------------------------------------------
 
     return (
-        <div className="home-page">
-            {route === "welcome" ? <Welcome setRoute={setRoute} /> : null}
-            {route === "add-video" ? (
-                <VideoSelectionBox
-                    setRoute={setRoute}
-                    setTranscript={setTranscript}
-                    setFilename={setFilename}
-                />
-            ) : null}
-            {route === "captions-editor" ? (
-                <VideoAndTranscriptEditor
-                    transcript={transcript}
-                    filename={filename}
-                />
-            ) : null}
-        </div>
+        <>
+            <Header />
+            <div className="home-page">
+                {route === "welcome" ? <Welcome setRoute={setRoute} /> : null}
+                {route === "add-video" ? (
+                    <VideoSelectionBox
+                        setRoute={setRoute}
+                        setTranscript={setTranscript}
+                        setFilename={setFilename}
+                    />
+                ) : null}
+                {route === "captions-editor" ? (
+                    <VideoAndTranscriptEditor
+                        transcript={transcript}
+                        filename={filename}
+                    />
+                ) : null}
+            </div>
+            <Footer />
+        </>
     );
 };
 

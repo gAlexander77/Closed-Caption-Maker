@@ -16,34 +16,27 @@ def allowed_file(filename):
 
 @video_bp.route('/upload-video', methods=['POST'])
 def upload_video():
-    # Check if the post request has the file part
+    save_location = '../in-out'
+    session_id = session['session_id']
+    video_name = f"{session_id}.mp4"
+    save_path = os.path.join(save_location, video_name)
+
     if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
-
-    # If the user does not select a file, the browser submits an
-    # empty file without a filename.
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        session_id = session.get('session_id', 'default_session')
-        save_path = os.path.join('../in-out', f"{session_id}.mp4")
-        file.save(save_path)
-
-        print(f"{session_id}: File uploaded successfully")
-        print(f"{session_id}: Waiting for transcript...")
-
-        try:
-            transcript = transcribe_audio(audio_file_path=save_path)
-            session['transcript'] = transcript
-            print(transcript)
-            return jsonify({"message": "File uploaded and transcribed successfully", "transcript": transcript}), 200
-        except Exception as e:
-            return jsonify({"error": f"An error occurred during transcription: {str(e)}"}), 500
+        return jsonify({'error': "No file in request."}), 400
     else:
-        return jsonify({"error": "Invalid file format"}), 400
+        file = request.files['file']
+        file.save(save_path)
+        print(session['session_id']+": Uploaded video Successfully")
+
+    try:
+        print(session['session_id']+": Waiting for transcript...")
+        transcript = transcribe_audio(audio_file_path=save_path)
+        session['transcript'] = transcript
+        print(transcript)
+
+        return jsonify({"message": "Video downloaded successfully", "transcript": transcript, "filename": video_name}), 200
+    except Exception as e:
+        return f"An error occurred: {str(e)}", 500
 
 @video_bp.route('/upload-youtube-video', methods=['POST'])
 def upload_youtube_video():

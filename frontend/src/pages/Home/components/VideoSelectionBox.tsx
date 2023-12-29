@@ -42,7 +42,11 @@ const VideoSelectionBox: FC<VideoSelectionBoxProps> = ({
                         setFilename={setFilename}
                     />
                 ) : (
-                    <UploadVideo />
+                    <UploadVideo
+                        setTranscript={setTranscript}
+                        setRoute={setRoute}
+                        setFilename={setFilename}
+                    />
                 )}
             </div>
         </div>
@@ -87,26 +91,121 @@ const VideoInputSelection: FC<VideoInputSelectionProps> = ({
     );
 };
 
+interface UploadVideoProps {
+    setRoute: (route: string) => void;
+    setTranscript: (transcript: TranscriptEntry[]) => void;
+    setFilename: (filename: string) => void;
+}
+
 // Component For Video Selection Box
-const UploadVideo: FC = () => {
+const UploadVideo: FC<UploadVideoProps> = ({
+    setTranscript,
+    setRoute,
+    setFilename,
+}) => {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [videoFile, setVideoFile] = useState<any>(null);
+
     const onDrop = useCallback((acceptedFiles: any) => {
-        console.log(acceptedFiles);
+        const file = acceptedFiles[0];
+        if (file && file.type === "video/mp4") {
+            setVideoFile(file);
+            console.log("File accepted:", file);
+        } else {
+            alert("Only .MP4 files are allowed.");
+            console.error("File rejected. Only .MP4 files are allowed.");
+        }
     }, []);
 
     const { getRootProps, getInputProps } = useDropzone({
         onDrop,
     });
 
+    const uploadFile = async () => {
+        if (!videoFile) {
+            alert("Please select a file to upload");
+            return;
+        }
+
+        setIsLoading(true);
+
+        const formData = new FormData();
+        formData.append("file", videoFile); // The 'file' key should match the key Flask expects
+
+        try {
+            const response = await axios.post(
+                `${API_URL}video/upload-video`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            // Handle the response from the server
+            console.log("Response:", response.data);
+            if (response.data.transcript) {
+                setTranscript(response.data.transcript);
+                setFilename(response.data.filename);
+                setRoute("captions-editor");
+                sessionStorage.setItem(
+                    "transcript",
+                    JSON.stringify(response.data.transcript)
+                );
+                sessionStorage.setItem("filename", response.data.filename);
+            }
+
+            setIsLoading(false);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error(
+                    "Upload error:",
+                    error.response?.data || error.message
+                );
+            } else {
+                console.error("An unexpected error occurred", error);
+            }
+        }
+    };
+
     return (
         <div className="upload-video-container">
-            <div className="drag-and-drop" {...getRootProps()}>
-                <input {...getInputProps()} />
-                <h1>Drag and drop video</h1>
-                <h1>or</h1>
-                <button>Browse Files</button>
-            </div>
-            <div>
-                <button>Upload Video</button>
+            {isLoading ? (
+                <div className="loading-container">
+                    <p>Uploading Video and Generating Transcript</p>
+                    <ThreeDots
+                        height="40"
+                        width="40"
+                        radius="9"
+                        color="white"
+                        ariaLabel="three-dots-loading"
+                        wrapperStyle={{}}
+                        visible={true}
+                    />
+                </div>
+            ) : (
+                <div className="drag-and-drop" {...getRootProps()}>
+                    <input {...getInputProps()} />
+                    <div className="border"></div>
+                    <h1 id="text">Drag and drop video</h1>
+                    <h1 id="text">or</h1>
+                    <button className="browse-btn">Browse Files</button>
+                    <div className="border">
+                        {videoFile && (
+                            <p className="video-name">{videoFile.name}</p>
+                        )}
+                    </div>
+                </div>
+            )}
+            <div className="upload-video-btn-container">
+                <button
+                    className="upload-video-btn"
+                    onClick={uploadFile}
+                    disabled={isLoading}
+                >
+                    Upload Video
+                </button>
             </div>
         </div>
     );

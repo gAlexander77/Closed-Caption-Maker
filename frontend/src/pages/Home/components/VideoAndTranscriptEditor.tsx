@@ -1,4 +1,11 @@
-import React, { FC, useState, useEffect, useRef, createRef } from "react";
+import React, {
+    FC,
+    useState,
+    useEffect,
+    useRef,
+    createRef,
+    useSyncExternalStore,
+} from "react";
 import {
     BsArrowCounterclockwise,
     BsDownload,
@@ -92,6 +99,8 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
     filename,
     setCurrentTime,
 }) => {
+    const [canLoadChanges, setCanLoadChanges] = useState<boolean>(false);
+
     const convertJsonToWebVTT = (jsonTranscript: any) => {
         let vttString = "WEBVTT\n\n";
 
@@ -112,18 +121,33 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
             const blob = new Blob([webVttString], { type: "text/vtt" });
             setSubtitlesUrl(URL.createObjectURL(blob));
             // console.log(subtitlesUrl);
-            setSubtitlesKey((prevKey) => prevKey + 1);
+            // setSubtitlesKey((prevKey) => prevKey + 1);
+            console.log("Changed");
+            setCanLoadChanges(true);
         }
     }, [transcript]);
+
+    const loadChanges = () => {
+        setSubtitlesKey((prevKey) => prevKey + 1);
+        setCanLoadChanges(false);
+    };
 
     const playerRef = useRef(null);
     const handleProgress = (state: any) => {
         setCurrentTime(state.playedSeconds.toFixed(0));
     };
 
+    useEffect(() => {
+        setTimeout(() => {
+            loadChanges();
+        }, 70);
+    }, []);
+
     return (
         <div className="video-player">
-            {/* <button>Load Transcript Changes</button> */}
+            {canLoadChanges && (
+                <button onClick={loadChanges}>Load Transcript Changes</button>
+            )}
             <ReactPlayer
                 className="react-player"
                 key={subtitlesKey}

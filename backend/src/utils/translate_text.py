@@ -2,7 +2,10 @@ from deep_translator import GoogleTranslator
 
 def translate(text="There was an error", translate_to="en"):
     translated = GoogleTranslator(source='auto', target=translate_to).translate(text)
-    return translated
+    if translated is not None:
+        return translated
+    else:
+        return text
 
 TRANSCRIPT_FORMAT = [
     {

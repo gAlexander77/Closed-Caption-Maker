@@ -58,7 +58,7 @@
     display: flex;
     flex-direction: column;
 }
-
+/* UploadVideo */
 .upload-video-container {
     display: flex;
     flex-direction: column;
@@ -67,15 +67,76 @@
     height: 100%;
 }
 
+.loading-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
 .upload-video-container > .drag-and-drop {
     flex-grow: 1;
     border: 4px dashed var(--brown-1);
+    margin-top: 10px;
     padding: 20px;
-    width: calc(100% - 40px);
+    width: calc(100% - 80px);
     display: flex;
     flex-direction: column;
     border-radius: 5px;
     text-align: center;
+    cursor: pointer;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.drag-and-drop .border {
+    flex-grow: 1;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.drag-and-drop .border .video-name {
+    all: unset;
+    color: var(--tan-2);
+}
+
+.drag-and-drop #text {
+    all: unset;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.drag-and-drop .browse-btn {
+    all: unset;
+    background-color: var(--brown-1);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.upload-video-btn-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin-top: 40px;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-video-btn-container > .upload-video-btn {
+    all: unset;
+    background-color: var(--tan-2);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
     cursor: pointer;
 }
 
