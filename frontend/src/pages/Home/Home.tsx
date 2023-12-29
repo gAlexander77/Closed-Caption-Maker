@@ -84,6 +84,7 @@ const Home: FC = () => {
                     <VideoAndTranscriptEditor
                         transcript={transcript}
                         filename={filename}
+                        setRoute={setRoute}
                     />
                 ) : null}
             </div>

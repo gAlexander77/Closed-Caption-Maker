@@ -130,7 +130,7 @@ const UploadVideo: FC<UploadVideoProps> = ({
         setIsLoading(true);
 
         const formData = new FormData();
-        formData.append("file", videoFile); // The 'file' key should match the key Flask expects
+        formData.append("file", videoFile);
 
         try {
             const response = await axios.post(
@@ -216,11 +216,6 @@ interface UploadYoutubeProps {
     setTranscript: (transcript: TranscriptEntry[]) => void;
     setFilename: (filename: string) => void;
 }
-
-const hasSessionCookie = (): boolean => {
-    const cookies = document.cookie.split(";");
-    return cookies.some((cookie) => cookie.trim().startsWith(`session=`));
-};
 
 const UploadYoutube: FC<UploadYoutubeProps> = ({
     setTranscript,

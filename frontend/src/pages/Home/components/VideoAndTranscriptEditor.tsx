@@ -1,11 +1,4 @@
-import React, {
-    FC,
-    useState,
-    useEffect,
-    useRef,
-    createRef,
-    useSyncExternalStore,
-} from "react";
+import React, { FC, useState, useEffect, useRef, createRef } from "react";
 import {
     BsArrowCounterclockwise,
     BsDownload,
@@ -28,37 +21,59 @@ interface TranscriptEntry {
 interface VideoAndTranscriptEditorProps {
     transcript: TranscriptEntry[];
     filename: string;
+    setRoute: (route: string) => void;
 }
 
 // Video And Transcript Editor
 const VideoAndTranscriptEditor: FC<VideoAndTranscriptEditorProps> = ({
     transcript,
     filename,
+    setRoute,
 }) => {
     const [transcriptCopy, setTranscriptCopy] =
         useState<TranscriptEntry[]>(transcript);
     const [transcriptHasChanged, setTranscriptHasChanged] =
         useState<boolean>(false);
+    const [currentTime, setCurrentTime] = useState(0);
 
+    // Copies the original transcript so
+    // it can be edited
     useEffect(() => {
         setTranscriptCopy(transcript);
     }, [transcript]);
 
+    // Compares Current Transcript to Copy to
+    // detect any changes
     useEffect(() => {
         setTranscriptHasChanged(
             JSON.stringify(transcript) !== JSON.stringify(transcriptCopy)
         );
     }, [transcriptCopy]);
 
+    // Sets Transcrip Back to original state
     const undoChanges = (): void => {
         setTranscriptCopy([...transcript]);
     };
 
+    // Logging Transcript Changes
     useEffect(() => {
         console.log(transcriptCopy);
     });
 
-    const [currentTime, setCurrentTime] = useState(0);
+    // Sends user to #add-video
+    // If the filename or transcript is null
+    useEffect(() => {
+        setTimeout(() => {
+            const transcriptData = sessionStorage.getItem("transcript");
+            const filenameData = sessionStorage.getItem("filename");
+            console.log(transcriptData);
+            console.log(filenameData);
+            if (transcriptData === null || filenameData === null) {
+                setRoute("add-video");
+            }
+        }, 100);
+    }, []);
+
     return (
         <div className="video-and-transcript-editor-component">
             <VideoPlayer
@@ -100,21 +115,26 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
     setCurrentTime,
 }) => {
     const [canLoadChanges, setCanLoadChanges] = useState<boolean>(false);
+    const [subtitlesUrl, setSubtitlesUrl] = useState("");
+    const [subtitlesKey, setSubtitlesKey] = useState(0);
+    const playerRef = useRef(null);
 
+    // Sets the current time to the progress of the ReactPlayer
+    const handleProgress = (state: any) => {
+        setCurrentTime(state.playedSeconds.toFixed(0));
+    };
+
+    // Set the transcript to VVT format
     const convertJsonToWebVTT = (jsonTranscript: any) => {
         let vttString = "WEBVTT\n\n";
-
         jsonTranscript.forEach((entry: any) => {
             vttString += `${entry.start} --> ${entry.end}\n`;
             vttString += `${entry.text}\n\n`;
         });
-        // console.log(vttString);
         return vttString;
     };
 
-    const [subtitlesUrl, setSubtitlesUrl] = useState("");
-    const [subtitlesKey, setSubtitlesKey] = useState(0);
-
+    // Creates a VVT Blob for the ReactPlayer
     useEffect(() => {
         if (transcript) {
             const webVttString = convertJsonToWebVTT(transcript);
@@ -122,21 +142,18 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
             setSubtitlesUrl(URL.createObjectURL(blob));
             // console.log(subtitlesUrl);
             // setSubtitlesKey((prevKey) => prevKey + 1);
-            console.log("Changed");
+            // console.log("Changed");
             setCanLoadChanges(true);
         }
     }, [transcript]);
 
+    // Loads transcript to ReactPlayer
     const loadChanges = () => {
         setSubtitlesKey((prevKey) => prevKey + 1);
         setCanLoadChanges(false);
     };
 
-    const playerRef = useRef(null);
-    const handleProgress = (state: any) => {
-        setCurrentTime(state.playedSeconds.toFixed(0));
-    };
-
+    // Loads Transcript on initial screenload
     useEffect(() => {
         setTimeout(() => {
             loadChanges();
@@ -158,7 +175,6 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
                 height="100%"
                 controls={true}
                 playing={false}
-                // Additional props for more customization
                 config={{
                     file: {
                         tracks: [
@@ -197,6 +213,8 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
         (_, i) => entryRefs.current[i] ?? createRef<HTMLDivElement>()
     );
 
+    // Scrolls to the current transcript entry
+    // this is based on the progress of the ReactPlayer
     useEffect(() => {
         const currentEntryIndex = transcript.findIndex((entry) => {
             const startSeconds = convertTimeToSeconds(entry.start);
@@ -218,6 +236,7 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
         }
     }, [currentTime, transcript]);
 
+    // Handles Changes to the Entries
     const handleTextChange = (newText: string, start: string, end: string) => {
         const updatedTranscript = transcript.map((entry) => {
             if (entry.start === start && entry.end === end) {
@@ -276,25 +295,19 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
     entryRef,
     onChangeText,
 }) => {
-    const startTimeInSeconds = convertTimeToSeconds(start);
-    const endTimeInSeconds = convertTimeToSeconds(end);
+    const startTimeInSeconds: number = convertTimeToSeconds(start);
+    const endTimeInSeconds: number = convertTimeToSeconds(end);
 
-    const isCurrentTimeInRange =
+    // Check to see the currrent time is within the range of the current entry
+    const isCurrentTimeInRange: boolean =
         currentTime >= startTimeInSeconds && currentTime < endTimeInSeconds;
 
+    // Formates time to HH:MM:SS
     const formatTime = (timeString: string): string => {
         const totalSeconds = convertTimeToSeconds(timeString);
-
         let hours = Math.floor(totalSeconds / 3600);
         let minutes = Math.floor((totalSeconds - hours * 3600) / 60);
         let seconds = Math.floor(totalSeconds - hours * 3600 - minutes * 60);
-        // console.log(
-        //     totalSeconds +
-        //         " " +
-        //         `${minutes}:${seconds < 10 ? "0" + seconds : seconds}` +
-        //         " " +
-        //         start
-        // );
         if (hours > 0) {
             return `${hours < 10 ? "0" + hours : hours}:${
                 minutes < 10 ? "0" + minutes : minutes
@@ -338,6 +351,8 @@ const DownloadVideoWithCaptions: FC<DownloadVideoWithCaptionsProps> = ({
     const [isPreparing, setIsPreparing] = useState<boolean>(false);
     const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
+    // POST /Captions
+    // Gets video download with captions burned on video
     const prepareVideoForDownload = async () => {
         setIsPreparing(true);
         try {
@@ -355,6 +370,7 @@ const DownloadVideoWithCaptions: FC<DownloadVideoWithCaptionsProps> = ({
         }
     };
 
+    // Handles the download
     const handleDownload = async () => {
         const response = await fetch(downloadUrl ?? "");
         const blob = await response.blob();
@@ -416,6 +432,8 @@ const TranslateTranscript: FC<TranslateTranscriptProps> = ({
     const [selectedLanguage, setSelectedLanguage] = useState<string>("english");
     const url = API_URL + "translate/";
 
+    // POST /Translate
+    // Translates transcript to language selected by the user
     const handleUpload = async () => {
         if (!transcriptCopy) {
             return;
@@ -432,7 +450,7 @@ const TranslateTranscript: FC<TranslateTranscriptProps> = ({
                 },
             });
 
-            console.log("Before update:", transcriptCopy);
+            // console.log("Before update:", transcriptCopy);
 
             const translated_transcript: TranscriptEntry[] =
                 response.data.translated_transcript;
