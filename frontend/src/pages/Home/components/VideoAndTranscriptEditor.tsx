@@ -74,12 +74,16 @@ const VideoAndTranscriptEditor: FC<VideoAndTranscriptEditorProps> = ({
         }, 100);
     }, []);
 
+    // Stores the maxheight for the transcript editor based on the height of the video player
+    const [maxHeight, setMaxHeight] = useState(0);
+
     return (
         <div className="video-and-transcript-editor-component">
             <VideoPlayer
                 transcript={transcriptCopy}
                 filename={filename}
                 setCurrentTime={setCurrentTime}
+                setMaxHeight={setMaxHeight}
             />
             <TranscriptEditor
                 transcript={transcriptCopy}
@@ -87,6 +91,7 @@ const VideoAndTranscriptEditor: FC<VideoAndTranscriptEditorProps> = ({
                 currentTime={currentTime}
                 transcriptHasChanged={transcriptHasChanged}
                 undoChanges={undoChanges}
+                maxHeight={maxHeight}
             />
             <DownloadVideoWithCaptions
                 transcript={transcriptCopy}
@@ -106,6 +111,7 @@ interface VideoPlayerProps {
     transcript: TranscriptEntry[];
     filename: string;
     setCurrentTime: (currentTime: number) => void;
+    setMaxHeight: (maxHeight: number) => void;
 }
 
 // Component For Video And Transcript Editor
@@ -113,6 +119,7 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
     transcript,
     filename,
     setCurrentTime,
+    setMaxHeight,
 }) => {
     const [canLoadChanges, setCanLoadChanges] = useState<boolean>(false);
     const [subtitlesUrl, setSubtitlesUrl] = useState("");
@@ -160,8 +167,27 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
         }, 70);
     }, []);
 
+    const videoPlayer = useRef<HTMLDivElement>(null);
+
+    // Tracks the Height of "video-player"
+    useEffect(() => {
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                setMaxHeight(entry.target.clientHeight);
+            }
+        });
+        if (videoPlayer.current) {
+            resizeObserver.observe(videoPlayer.current);
+        }
+        return () => {
+            if (videoPlayer.current) {
+                resizeObserver.unobserve(videoPlayer.current);
+            }
+        };
+    }, []);
+
     return (
-        <div className="video-player">
+        <div className="video-player" ref={videoPlayer}>
             {canLoadChanges && (
                 <button onClick={loadChanges}>Load Transcript Changes</button>
             )}
@@ -199,6 +225,7 @@ interface TranscriptEditorProps {
     currentTime: number;
     transcriptHasChanged: boolean;
     undoChanges: any;
+    maxHeight: number;
 }
 
 const TranscriptEditor: FC<TranscriptEditorProps> = ({
@@ -207,6 +234,7 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
     currentTime,
     transcriptHasChanged,
     undoChanges,
+    maxHeight,
 }) => {
     const entryRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
     entryRefs.current = transcript.map(
@@ -248,7 +276,12 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
     };
 
     return (
-        <div className="transcript-editor">
+        <div
+            className="transcript-editor"
+            style={{
+                maxHeight: `${maxHeight - 20}px`,
+            }}
+        >
             <div className="transcript-editor-header">
                 <h1 className="transcript-editor-title">Transcript</h1>
                 {transcriptHasChanged ? (

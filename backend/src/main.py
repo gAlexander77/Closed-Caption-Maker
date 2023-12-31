@@ -4,8 +4,6 @@ import uuid
 from routes.video import video_bp
 from routes.translate import translate_bp
 from routes.captions import captions_bp
-from utils.audio_to_text import transcribe_audio
-from utils.translate_text import translate
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
