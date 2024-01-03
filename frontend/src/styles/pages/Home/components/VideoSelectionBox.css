@@ -3,17 +3,21 @@
     width: 740px;
     height: 420px;
     border-radius: 10px;
-    border: 1px solid black;
     padding: 20px 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
 .video-input-selection-container {
     width: 100%;
     display: flex;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .video-input-selection-container > .input-selection-container {
@@ -58,6 +62,7 @@
     display: flex;
     flex-direction: column;
 }
+
 /* UploadVideo */
 .upload-video-container {
     display: flex;
@@ -73,6 +78,7 @@
     justify-content: center;
     align-items: center;
     gap: 10px;
+    font-weight: bold;
 }
 
 .upload-video-container > .drag-and-drop {
@@ -164,6 +170,7 @@
     all: unset;
     font-size: 1.5em;
     font-weight: bold;
+    cursor: default;
 }
 
 .upload-youtube-video-container > .input-container > input {
@@ -173,6 +180,7 @@
     border-radius: 5px;
     padding: 5px 10px;
     width: 400px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
 .upload-youtube-video-container > .input-container > .status-container {

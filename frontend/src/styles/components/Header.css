@@ -8,6 +8,11 @@
     padding: 0px 20px;
 }
 
-.header-component > h1 {
+.header-component > .header-link {
+    all: unset;
+    cursor: pointer;
+}
+
+.header-component h1 {
     color: var(--tan-1);
 }

@@ -1,4 +1,5 @@
 import React, { FC, useState, useEffect, useRef, createRef } from "react";
+import { motion } from "framer-motion";
 import {
     BsArrowCounterclockwise,
     BsDownload,
@@ -77,13 +78,29 @@ const VideoAndTranscriptEditor: FC<VideoAndTranscriptEditorProps> = ({
     // Stores the maxheight for the transcript editor based on the height of the video player
     const [maxHeight, setMaxHeight] = useState(0);
 
+    // Ref of the ReactPlayer
+    const playerRef = useRef<ReactPlayer>(null);
+
+    // Sets the current time of the react player to the inputted seconds
+    const seekToPosition = (seconds: number) => {
+        if (playerRef.current && playerRef.current.seekTo) {
+            playerRef.current.seekTo(seconds, "seconds");
+        }
+    };
+
     return (
-        <div className="video-and-transcript-editor-component">
+        <motion.div
+            className="video-and-transcript-editor-component"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ ease: "easeOut", duration: 0.8, delay: 0.1 }}
+        >
             <VideoPlayer
                 transcript={transcriptCopy}
                 filename={filename}
                 setCurrentTime={setCurrentTime}
                 setMaxHeight={setMaxHeight}
+                playerRef={playerRef}
             />
             <TranscriptEditor
                 transcript={transcriptCopy}
@@ -92,6 +109,7 @@ const VideoAndTranscriptEditor: FC<VideoAndTranscriptEditorProps> = ({
                 transcriptHasChanged={transcriptHasChanged}
                 undoChanges={undoChanges}
                 maxHeight={maxHeight}
+                seekToPosition={seekToPosition}
             />
             <DownloadVideoWithCaptions
                 transcript={transcriptCopy}
@@ -101,7 +119,7 @@ const VideoAndTranscriptEditor: FC<VideoAndTranscriptEditorProps> = ({
                 transcriptCopy={transcriptCopy}
                 setTranscriptCopy={setTranscriptCopy}
             />
-        </div>
+        </motion.div>
     );
 };
 
@@ -112,6 +130,7 @@ interface VideoPlayerProps {
     filename: string;
     setCurrentTime: (currentTime: number) => void;
     setMaxHeight: (maxHeight: number) => void;
+    playerRef: React.RefObject<ReactPlayer>;
 }
 
 // Component For Video And Transcript Editor
@@ -120,11 +139,11 @@ const VideoPlayer: FC<VideoPlayerProps> = ({
     filename,
     setCurrentTime,
     setMaxHeight,
+    playerRef,
 }) => {
     const [canLoadChanges, setCanLoadChanges] = useState<boolean>(false);
     const [subtitlesUrl, setSubtitlesUrl] = useState("");
     const [subtitlesKey, setSubtitlesKey] = useState(0);
-    const playerRef = useRef(null);
 
     // Sets the current time to the progress of the ReactPlayer
     const handleProgress = (state: any) => {
@@ -226,6 +245,7 @@ interface TranscriptEditorProps {
     transcriptHasChanged: boolean;
     undoChanges: any;
     maxHeight: number;
+    seekToPosition: (seconds: number) => void;
 }
 
 const TranscriptEditor: FC<TranscriptEditorProps> = ({
@@ -235,6 +255,7 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
     transcriptHasChanged,
     undoChanges,
     maxHeight,
+    seekToPosition,
 }) => {
     const entryRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
     entryRefs.current = transcript.map(
@@ -303,6 +324,7 @@ const TranscriptEditor: FC<TranscriptEditorProps> = ({
                         currentTime={currentTime}
                         entryRef={entryRefs.current[index]}
                         onChangeText={handleTextChange}
+                        seekToPosition={seekToPosition}
                     />
                 ))}
             </div>
@@ -317,6 +339,7 @@ interface IndividualTranscriptEntryProps {
     currentTime: number;
     entryRef: any;
     onChangeText: any;
+    seekToPosition: (seconds: number) => void;
 }
 
 // Each Individual Transcript Entry For TranscriptEditor
@@ -327,6 +350,7 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
     currentTime,
     entryRef,
     onChangeText,
+    seekToPosition,
 }) => {
     const startTimeInSeconds: number = convertTimeToSeconds(start);
     const endTimeInSeconds: number = convertTimeToSeconds(end);
@@ -350,6 +374,11 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
         }
     };
 
+    // Sets the React Player to time of the selected entry
+    const goTo = () => {
+        seekToPosition(startTimeInSeconds + 0.4);
+    };
+
     return (
         <div
             ref={entryRef}
@@ -357,6 +386,7 @@ const IndividualTranscriptEntry: FC<IndividualTranscriptEntryProps> = ({
             style={{
                 background: isCurrentTimeInRange ? "#1f1c18" : "",
             }}
+            onClick={goTo}
         >
             <div className="time-container">
                 <p id="start">{formatTime(start)}</p>

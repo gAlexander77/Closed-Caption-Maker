@@ -1,4 +1,5 @@
 import React, { FC, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { ThreeDots } from "react-loader-spinner";
 import { BsCameraReelsFill, BsYoutube } from "react-icons/bs";
 import { useDropzone } from "react-dropzone";
@@ -26,10 +27,15 @@ const VideoSelectionBox: FC<VideoSelectionBoxProps> = ({
     setFilename,
 }) => {
     console.log(API_URL);
-    const [isYouTube, setIsYouTube] = useState<boolean>(true);
+    const [isYouTube, setIsYouTube] = useState<boolean>(false);
 
     return (
-        <div className="video-selection-box-component">
+        <motion.div
+            className="video-selection-box-component"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ ease: "easeOut", duration: 0.8, delay: 0.1 }}
+        >
             <VideoInputSelection
                 setIsYouTube={setIsYouTube}
                 isYouTube={isYouTube}
@@ -49,7 +55,7 @@ const VideoSelectionBox: FC<VideoSelectionBoxProps> = ({
                     />
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 };
 

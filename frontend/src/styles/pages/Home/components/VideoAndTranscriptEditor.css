@@ -118,19 +118,14 @@
 
 .transcript-entry-container > .time-container > p {
     all: unset;
-    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .text-container {
     flex-grow: 1;
-}
-
-.start-time-container {
-    justify-content: flex-start;
-}
-
-.end-time-container {
-    justify-content: flex-end;
 }
 
 /* Bottom Left */

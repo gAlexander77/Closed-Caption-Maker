@@ -5,7 +5,7 @@ import "../styles/components/Footer.css";
 const Footer = () => {
     const currentYear: number = new Date().getFullYear();
     const sourceCodeLink: string =
-        "https://github.com/gAlexander77/Closed-Caption-Video-Maker";
+        "https://github.com/gAlexander77/Closed-Caption-Maker";
 
     return (
         <div className="footer-component">
