@@ -1,9 +1,10 @@
 from flask import Blueprint, request, session, jsonify
-from flask_cors import CORS
 from werkzeug.utils import secure_filename
-from utils.audio_to_text import transcribe_audio
+from flask_cors import CORS
 from pytube import YouTube
 import os
+
+from utils.audio_to_text import transcribe_audio
 
 video_bp = Blueprint('video', __name__)
 CORS(video_bp)
@@ -16,7 +17,7 @@ def allowed_file(filename):
 
 @video_bp.route('/upload-video', methods=['POST'])
 def upload_video():
-    save_location = '../in-out'
+    save_location = './in-out'
     session_id = session['session_id']
     video_name = f"{session_id}.mp4"
     save_path = os.path.join(save_location, video_name)
@@ -45,7 +46,7 @@ def upload_youtube_video():
         return "No URL provided", 400
 
     url = request.form['url']
-    path = '../in-out'
+    path = './in-out'
 
     try:
         yt = YouTube(url)

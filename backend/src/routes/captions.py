@@ -5,8 +5,8 @@ captions_bp = Blueprint('captions', __name__)
 
 @captions_bp.route('/', methods=['POST'])
 def upload_video():
-    videoPath= f"../in-out/{session['session_id']}.mp4"
-    saveVideoPath= f"../in-out/{session['session_id']}-captions.mp4"
+    videoPath= f"./in-out/{session['session_id']}.mp4"
+    saveVideoPath= f"./in-out/{session['session_id']}-captions.mp4"
     
     data = request.get_json()
 
@@ -14,7 +14,7 @@ def upload_video():
         return jsonify({"error": "No JSON data provided"}), 400
     
     transcript = data.get('transcript')
-    videoPath = f"../in-out/{data.get('filename')}"
+    videoPath = f"./in-out/{data.get('filename')}"
 
     if not transcript:
         return jsonify({"error": "No transcript"}), 400

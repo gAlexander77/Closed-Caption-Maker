@@ -1,6 +1,6 @@
 import os
 
-def initialize_directory(folder="../in-out"):
+def initialize_directory(folder="./in-out"):
     try:
         folder_path = os.path.abspath(folder)
         print(f"[Server]: Looking for \"{folder}\"...")
