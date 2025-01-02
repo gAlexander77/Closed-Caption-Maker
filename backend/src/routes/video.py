@@ -2,6 +2,7 @@ from flask import Blueprint, request, session, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
 from pytube import YouTube
+import yt_dlp
 import os
 
 from utils.audio_to_text import transcribe_audio
@@ -41,25 +42,77 @@ def upload_video():
 
 @video_bp.route('/upload-youtube-video', methods=['POST'])
 def upload_youtube_video():
-
     if 'url' not in request.form:
         return "No URL provided", 400
 
     url = request.form['url']
     path = './in-out'
+    cookies_path = './cookies.txt'
+
+    if 'session_id' not in session:
+        return "Session ID not found in session", 400
+
+    session_id = session['session_id']
+    filelocation = os.path.join(path, f"{session_id}")
 
     try:
-        yt = YouTube(url)
-        video = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
-        filename = f"{session['session_id']}.mp4"
-        video.download(output_path=path, filename=filename)
-        filelocation = f"{path}/{filename}"
-        print(session['session_id']+": Done Downloading")
-        print(session['session_id']+": Waiting for transcript...")
-        transcript = transcribe_audio(audio_file_path=filelocation)
-        session['transcript'] = transcript
-        print(transcript)
+        os.makedirs(path, exist_ok=True)
 
-        return jsonify({"message": "Video downloaded successfully", "transcript": transcript, "filename": filename}), 200
+        print(f"Processing URL: {url}")
+        ydl_opts = {
+            'format': 'bestvideo+bestaudio/best',
+            'outtmpl': filelocation, 
+            'postprocessors': [{
+                'key': 'FFmpegVideoConvertor',
+                'preferedformat': 'mp4',
+            }],
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        final_filelocation = f"{filelocation}.mp4"
+        print(f"{session_id}: Done Downloading to {final_filelocation}")
+
+        print(f"{session_id}: Waiting for transcript...")
+        transcript = transcribe_audio(audio_file_path=final_filelocation)
+        if not transcript:
+            return "Transcription failed", 500
+
+        session['transcript'] = transcript
+        print(f"Transcript: {transcript}")
+
+        return jsonify({
+            "message": "Video downloaded successfully",
+            "transcript": transcript,
+            "filename": f"{session_id}.mp4"
+        }), 200
     except Exception as e:
-        return f"An error occurred: {str(e)}", 500
+        error_message = f"An error occurred: {str(e)}"
+        print(error_message)
+        return error_message, 500
+        
+# def upload_youtube_video():
+
+#     if 'url' not in request.form:
+#         return "No URL provided", 400
+
+#     url = request.form['url']
+#     path = './in-out'
+
+#     try:
+#         yt = YouTube(url)
+#         video = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
+#         filename = f"{session['session_id']}.mp4"
+#         video.download(output_path=path, filename=filename)
+#         filelocation = f"{path}/{filename}"
+#         print(session['session_id']+": Done Downloading")
+#         print(session['session_id']+": Waiting for transcript...")
+#         transcript = transcribe_audio(audio_file_path=filelocation)
+#         session['transcript'] = transcript
+#         print(transcript)
+
+#         return jsonify({"message": "Video downloaded successfully", "transcript": transcript, "filename": filename}), 200
+#     except Exception as e:
+#         return f"YouTube has blocked this feature, try Upload Video", 500
+#         # return f"An error occurred: {str(e)}", 500
